@@ -1,0 +1,5 @@
+claude-code-sdk>=0.1.0
+pandas>=2.0.0
+matplotlib>=3.5.0
+numpy>=1.24.0
+python-dotenv>=1.0.0
