@@ -183,18 +183,22 @@ Use the EXACT data shown above."""
             print(f"\n\n🔍 TURN 3: Chart Analysis")
             print("-" * 40)
             
-            query3 = f"""I created a chart saved as 'analytics_chart.png' showing:
-Revenue by category: {revenue_dict if 'revenue_dict' in locals() else 'Electronics vs Accessories'}
+            # Read the chart image and include it in the query
+            chart_path = Path('analytics_chart.png')
+            
+            query3 = f"""I created a chart showing revenue by category with these values:
+{revenue_dict if 'revenue_dict' in locals() else 'Electronics vs Accessories'}
 
-Please analyze this chart image and provide:
+Please analyze the attached chart image and provide:
 1. Key insights from the visualization
 2. Which category performs better
-3. Business recommendations
+3. Business recommendations based on the data shown
 
-Reference: analytics_chart.png"""
+The chart is attached as analytics_chart.png"""
             
             print("Analyzing the generated chart...")
-            await client.query(query3)
+            # Include the chart image in the query
+            await client.query(query3, attachments=[str(chart_path)])
             
             async for message in client.receive_response():
                 if hasattr(message, 'content'):
