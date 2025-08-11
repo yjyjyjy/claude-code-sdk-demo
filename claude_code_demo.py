@@ -9,6 +9,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+from logger_util import init_logging, get_logger
 
 load_dotenv()
 
@@ -25,8 +26,12 @@ except ImportError as e:
 async def working_demo():
     """Demonstrate proper result passing between turns"""
     
+    # Initialize logging
+    logger = init_logging()
+    
     print("\n🚀 Working Multi-Turn Data Analytics Demo")
     print("="*60)
+    print(f"📝 Logging to: {logger.log_file}")
     
     # First, let's examine our data to understand the structure
     df = pd.read_csv('sample_data.csv')
@@ -62,6 +67,7 @@ Please generate Python code to:
 Use EXACT column names shown above."""
         
         print("Sending detailed data analysis request...")
+        logger.log_query(query1, turn=1)
         await client.query(query1)
         
         response1 = ""
@@ -69,6 +75,9 @@ Use EXACT column names shown above."""
         session_id = None
         
         async for message in client.receive_response():
+            # Log the complete response object
+            logger.log_response(message, turn=1)
+            
             if hasattr(message, 'content'):
                 for block in message.content:
                     if hasattr(block, 'text'):
@@ -96,10 +105,12 @@ Use EXACT column names shown above."""
                 exec_globals = {'pd': pd, 'np': np}
                 exec(code, exec_globals)
                 result1 = exec_globals.get('result')
+                logger.log_execution(code, result1, turn=1, success=True)
                 print(f"✅ Execution successful!")
                 print(f"📊 Result keys: {list(result1.keys()) if result1 else 'None'}")
                 
             except Exception as e:
+                logger.log_execution(code, None, turn=1, success=False, error=str(e))
                 print(f"❌ Error: {e}")
                 result1 = None
         
@@ -137,12 +148,16 @@ Use the EXACT data shown above."""
 3. Create bar chart and save as 'analytics_chart.png'"""
         
         print("Sending visualization request with actual data...")
+        logger.log_query(query2, turn=2)
         await client.query(query2)
         
         response2 = ""
         cost2 = 0
         
         async for message in client.receive_response():
+            # Log the complete response object
+            logger.log_response(message, turn=2)
+            
             if hasattr(message, 'content'):
                 for block in message.content:
                     if hasattr(block, 'text'):
@@ -169,12 +184,15 @@ Use the EXACT data shown above."""
                 
                 chart_path = Path('analytics_chart.png')
                 if chart_path.exists():
+                    logger.log_execution(viz_code, str(chart_path), turn=2, success=True)
                     print(f"✅ Chart created: {chart_path}")
                     chart_created = True
                 else:
+                    logger.log_execution(viz_code, None, turn=2, success=False, error="Chart file not found")
                     print("⚠️  Chart file not found after execution")
                     
             except Exception as e:
+                logger.log_execution(viz_code, None, turn=2, success=False, error=str(e))
                 print(f"❌ Visualization error: {e}")
         
         # TURN 3: Chart analysis (if successful)
@@ -198,9 +216,13 @@ The chart is attached as analytics_chart.png"""
             
             print("Analyzing the generated chart...")
             # Include the chart image in the query
+            logger.log_query(query3, turn=3, attachments=[str(chart_path)])
             await client.query(query3, attachments=[str(chart_path)])
             
             async for message in client.receive_response():
+                # Log the complete response object
+                logger.log_response(message, turn=3)
+                
                 if hasattr(message, 'content'):
                     for block in message.content:
                         if hasattr(block, 'text'):
@@ -224,13 +246,19 @@ The chart is attached as analytics_chart.png"""
         if chart_created:
             print(f"📁 Chart location: {Path('analytics_chart.png').absolute()}")
         
-        return {
+        final_result = {
             'success': True,
             'total_cost': total_cost,
             'session_id': session_id,
             'chart_created': chart_created,
             'turns': turns
         }
+        
+        # Close logging session
+        logger.close_session(final_result)
+        print(f"📝 Complete session log saved to: {logger.log_file}")
+        
+        return final_result
 
 
 async def main():
