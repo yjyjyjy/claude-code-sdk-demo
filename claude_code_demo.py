@@ -203,21 +203,20 @@ Use the EXACT data shown above."""
             
             # Read the chart image and include it in the query
             chart_path = Path('analytics_chart.png')
+            chart_abs_path = chart_path.absolute()
             
             query3 = f"""I created a chart showing revenue by category with these values:
 {revenue_dict if 'revenue_dict' in locals() else 'Electronics vs Accessories'}
 
-Please analyze the attached chart image and provide:
+Please analyze this chart image {chart_abs_path} and provide:
 1. Key insights from the visualization
 2. Which category performs better
-3. Business recommendations based on the data shown
-
-The chart is attached as analytics_chart.png"""
+3. Business recommendations based on the data shown"""
             
             print("Analyzing the generated chart...")
-            # Include the chart image in the query
+            # Claude will automatically read the image file mentioned in prompt
             logger.log_query(query3, turn=3, attachments=[str(chart_path)])
-            await client.query(query3, attachments=[str(chart_path)])
+            await client.query(query3)
             
             async for message in client.receive_response():
                 # Log the complete response object
