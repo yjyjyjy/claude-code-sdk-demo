@@ -21,7 +21,7 @@ async def main():
     async with ClaudeSDKClient(
         options=ClaudeCodeOptions(
             system_prompt="You are a legal assistant. Identify risks and suggest improvements.",
-            max_turns=2,
+            max_turns=1,
             model="claude-sonnet-4-0"
         )
     ) as client:

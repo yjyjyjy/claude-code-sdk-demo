@@ -1,0 +1,54 @@
+# Weather MCP Server Justfile
+
+# Default recipe - show available commands
+default:
+    @just --list
+
+# Run the weather MCP server
+run:
+    uv run weather.py
+
+# Start the MCP inspector for testing
+inspect:
+    uv run mcp dev weather.py
+
+# Install dependencies
+install:
+    uv sync
+
+# Update dependencies
+update:
+    uv lock --upgrade
+
+# Run the server with verbose logging
+debug:
+    MCP_LOG_LEVEL=debug uv run weather.py
+
+# Test the server connection
+test:
+    uv run mcp test weather.py
+
+# Clean cache and temporary files
+clean:
+    rm -rf __pycache__
+    rm -rf .pytest_cache
+    find . -type f -name "*.pyc" -delete
+
+# Show server configuration
+config:
+    @echo "MCP Weather Server Configuration:"
+    @echo "================================"
+    @cat claude_desktop_config.json 2>/dev/null || echo "Config not found in current directory"
+
+# Lint Python files
+lint:
+    uv run ruff check *.py
+
+# Format Python files
+format:
+    uv run ruff format *.py
+
+# Check Python files without modifying
+check:
+    uv run ruff check --no-fix *.py
+    uv run ruff format --check *.py
